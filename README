@@ -1,1 +1,7 @@
 The code for auditing a Scantegrity election
+
+- commitment.py
+
+the Scantegrity commitment scheme.
+Requires PyCrypto
+
