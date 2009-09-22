@@ -44,11 +44,13 @@ def commit(message, key_b64, constant_b64):
   sak = aes_ecb(constant, key)
   debug("sak: %s " % binascii.hexlify(sak))
   
+  # compute h1 and h2
   h1 = sha256(message + sak)
   debug("h1: %s " % binascii.hexlify(h1))
   h2 = sha256(message + aes_ecb(h1, sak))
   debug("h2: %s " % binascii.hexlify(h2))
   
+  # concatenate and encode
   return base64.b64encode(h1 + h2)
   
 ##
