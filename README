@@ -5,3 +5,38 @@ The code for auditing a Scantegrity election
 the Scantegrity commitment scheme.
 Requires PyCrypto
 
+==================
+
+Each file that follows is used for one step of the audit. In each case,
+an election data directory is provided as input, e.g.
+
+  python meeting1.py <ELECTION_DATA_DIR>
+  
+This election data directory is expected to contain all of the XML files needed
+up to this point in the verification. For example, when running meeting1.py,
+the following files are expected:
+
+  MeetingOneIn.xml
+  MeetingOneOut.xml
+ 
+The verification programs are stateless: they reload all of the data they need at that point.
+This may make them slower than absolutely necessary, but it also prevents potential issues
+with data storage, with forgetting to run one verification, etc...
+
+Any signatures of the outputs are performed separately, these programs just run the verification.
+
+- meeting1.py
+
+load and hash the MeetingOneIn.xml and MeetingOneOut.xml files
+
+- meeting2.py
+
+load and hash the MeetingTwoIn, MeetingTwoOut, PrintCode, and MeetingTwoOutCommitments
+
+- meeting3.py
+
+- meeting4.py
+
+- contestedballots.py
+
+- spoiledballots.py

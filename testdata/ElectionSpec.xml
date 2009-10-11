@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+<electionSpecification version="0.1">
+	<electionInfo id="PunchScan">
+		<sections>
+			<section id="0" possition="1">
+				<questions>
+					<question id="0" possition="1" typeOfAnswerChoice="one_answer" max_number_of_answers_selected="1">
+						<answers>
+							<answer id="1" possition="2"/>
+							<answer id="0" possition="1"/>
+						</answers>
+					</question>
+					<question id="1" possition="2" typeOfAnswerChoice="rank" max_number_of_answers_selected="3">
+						<answers>
+							<answer id="2" possition="3"/>
+							<answer id="1" possition="2"/>
+							<answer id="0" possition="1"/>
+						</answers>
+					</question>
+					<question id="2" possition="3" typeOfAnswerChoice="multiple_answers" max_number_of_answers_selected="3">
+						<answers>
+							<answer id="3" possition="4"/>
+							<answer id="2" possition="3"/>
+							<answer id="1" possition="2"/>
+							<answer id="0" possition="1"/>
+						</answers>
+					</question>
+				</questions>
+			</section>
+		</sections>
+	</electionInfo>
+</electionSpecification>
+

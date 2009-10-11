@@ -1,0 +1,7 @@
+<xml>
+	<electionSpec>D:\PunchScan2.0\PunchScan2.0\Elections\BenDemo\public\ElectionSpec.xml</electionSpec>
+	<noBallots>20</noBallots>
+	<noDs>3</noDs>
+	<constant>RGVtbyBCZW4gV2FyZCA0IA==</constant>
+	<partitions>D:\PunchScan2.0\PunchScan2.0\Elections\BenDemo\public\partitions.xml</partitions>
+</xml>

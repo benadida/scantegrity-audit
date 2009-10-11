@@ -1,0 +1,10 @@
+<xml>
+	<print>
+			<row id="5" p3="0 2 0 1 0 1 3" page="NONE"/>
+			<row id="4" p3="0 2 1 0 0 -1 0" page="NONE"/>
+			<row id="1" p3="1 0 1 2 -1 3 0" page="NONE"/>
+			<row id="9" p3="1 1 0 2 1 3 0" page="NONE"/>
+			<row id="8" p3="1 0 2 1 0 2 -1" page="NONE"/>
+			<row id="3" p3="1 0 2 1 -1 1 -1" page="NONE"/>
+	</print>
+</xml>

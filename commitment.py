@@ -17,6 +17,9 @@ def aes_ecb(message, key):
   return aes_cipher.encrypt(message)
 
 def sha256(message):
+  """
+  A simple wrapper around SHA256 with byte-array output
+  """
   return hashlib.sha256(message).digest()
 
 DEBUG = False
