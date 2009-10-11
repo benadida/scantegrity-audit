@@ -6,6 +6,7 @@ ben@adida.net
 """
 
 from xml.etree import ElementTree
+import commitment
 
 class PartitionInfo(object):
   """
@@ -105,22 +106,111 @@ class Table(object):
   """
   A base table class that has features that P, D, and R tables all need
   """
+  
+  # fields that are to be interpreted as permutations
+  PERMUTATION_FIELDS = []
+  
   def __init__(self):
     self.rows = {}
+    
+  @classmethod
+  def process_row(cls, row):
+    """
+    for the fields that are interpreted as permutations,
+    do proper splitting on spaces to create python lists
+    """
+    for f in cls.PERMUTATION_FIELDS:
+      if row.has_key(f):
+        row[f] = [int(el) for el in row[f].split(' ')]
+    
+    return row
   
   def parse(self, etree):
     # look for all rows
     for row_el in etree.findall('row'):
-      self.rows[row_el.attrib['id']] = row_el.attrib
+      self.rows[row_el.attrib['id']] = self.process_row(row_el.attrib)
   
 class PTable(Table):
-  pass
+  PERMUTATION_FIELDS = ['p1', 'p2']
+  
+  @classmethod
+  def __check_commitment(cls, commitment_str, row_id, permutation, salt, constant):
+    """
+    check the reveal of a commitment to a permutation,
+    """
+    # prepare the string that we are committing to
+    message = row_id
+    message += ''.join([chr(el) for el in permutation])
+
+    # reperform commitment and check equality
+    return commitment_str == commitment.commit(message, salt, constant)
+    
+  def check_c1(self, reveal_row, constant):
+    return self.__check_commitment(self.rows[reveal_row['id']]['c1'], reveal_row['id'], reveal_row['p1'], reveal_row['s1'], constant)
+  
+  def check_c2(self, reveal_row, constant):
+    return self.__check_commitment(self.rows[reveal_row['id']]['c2'], reveal_row['id'], reveal_row['p2'], reveal_row['s2'], constant)
+    
+  def check_full_row(self, reveal_row, constant):
+    return self.check_c1(reveal_row, constant) and self.check_c2(reveal_row, constant)
 
 class DTable(Table):
-  pass
+  PERMUTATION_FIELDS = ['d2', 'd4']
+
+  @classmethod
+  def __check_commitment(cls, commitment_str, partition_id, instance_id, row_id, external_id, permutation, salt, constant):
+    """
+    check the reveal of a commitment to a permutation,
+    the "external_id" is the reference to the other table, either pid or rid
+    """
+    # prepare the string that we are committing to
+    message = chr(partition_id) + instance_id + row_id + external_id
+    message += ''.join([chr(el) for el in permutation])
+
+    # reperform commitment and check equality
+    return commitment_str == commitment.commit(message, salt, constant)
+  
+  def check_cl(self, partition_id, instance_id, reveal_row, constant):
+    relevant_row = self.rows[reveal_row['id']]
+    return self.__check_commitment(relevant_row['cl'], partition_id, instance_id, relevant_row['id'], reveal_row['pid'], reveal_row['d2'], reveal_row['sl'], constant)
+
+  def check_cr(self, partition_id, instance_id, reveal_row, constant):
+    relevant_row = self.rows[reveal_row['id']]
+    return self.__check_commitment(relevant_row['cr'], partition_id, instance_id, relevant_row['id'], reveal_row['rid'], reveal_row['d4'], reveal_row['sr'], constant)
+    
+  def check_full_row(self, *args):
+    return self.check_cl(*args) and self.check_cr(*args)
   
 class RTable(object):
   pass
+
+##
+## some reusable utilities
+##
+
+def parse_database(etree):
+  """
+  parses a P table and a bunch of D tables, which happens a few times
+  """
+  
+  # the P table
+  p_table = PTable()
+  p_table.parse(etree.find('database/print'))
+  
+  # the multiple D tables by partition
+  partitions = {}
+  partition_elements = etree.findall('database/partition')
+  
+  # go through each partition, each one is a dictionary of D-Table instances keyed by ID
+  for partition_el in partition_elements:
+    partitions[int(partition_el.attrib['id'])] = new_partition = {}
+    
+    d_table_instances = partition_el.findall('decrypt/instance')
+    for d_table_el in d_table_instances:
+      new_partition[d_table_el.attrib['id']] = new_d_table = DTable()
+      new_d_table.parse(d_table_el)
+      
+  return p_table, partitions
 
 
 def parse_meeting_one_in(partitions_path, election_spec_path, meeting_one_in_path):
@@ -139,27 +229,18 @@ def parse_meeting_one_in(partitions_path, election_spec_path, meeting_one_in_pat
 def parse_meeting_one_out(meeting_one_out_path):
   etree = ElementTree.parse(meeting_one_out_path)
   
-  # the P table
-  p_table = PTable()
-  p_table.parse(etree.find('database/print'))
+  return parse_database(etree)
   
-  # the multiple D tables by partition
-  partitions = {}
-  partition_elements = etree.findall('database/partition')
-  
-  # go through each partition, each one is a dictionary of D-Table instances keyed by ID
-  for partition_el in partition_elements:
-    partitions[partition_el.attrib['id']] = new_partition = {}
-    
-    d_table_instances = partition_el.findall('decrypt/instance')
-    for d_table_el in d_table_instances:
-      new_partition[d_table_el.attrib['id']] = new_d_table = DTable()
-      new_d_table.parse(d_table_el)
-      
-  return p_table, partitions
-
 def parse_meeting_two_in(meeting_two_in_path):
-  pass
+  etree = ElementTree.parse(meeting_two_in_path)
+  
+  # the P table of challenges
+  p_table = PTable()
+  p_table.parse(etree.find('challenges/print'))
+  
+  return p_table
   
 def parse_meeting_two_out(meeting_two_out_path):
-  pass
+  etree = ElementTree.parse(meeting_two_out_path)
+  
+  return parse_database(etree)
