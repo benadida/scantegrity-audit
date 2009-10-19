@@ -19,36 +19,74 @@ def _compare_positions(element_1, element_2):
 ## Permutations
 ##
 
-def split_permutations(concatenated_permutations, partition_map):
+def walk_permutation_map(p_map, func, running_data):
   """
-  Given concatenated permutations and a partition_map, i.e. [[2],[3,4]],
-  split things up into the appropriate tree structure of permutations
-  
-  done recursively, with base condition the partition_map being just an integer
-  of the number of answers
+  walk a permutation map and apply a func at the base, with extra args
+  passed and returned along the way
   """
   # this is uglier than it needs to be because of weird Python local variable
   # conflicts with closures
   
-  def walk_map(p_map, current_index):
-    if type(p_map) == list:
-      perms = []
-      for el in p_map:
-        new_perm, current_index = walk_map(el, current_index)
-        perms.append(new_perm)
-      return perms, current_index
-    else:
-      new_index = current_index + p_map
-      return concatenated_permutations[current_index:new_index], new_index
+  if type(p_map) == list:
+    perms = []
+    for el in p_map:
+      new_perm, running_data = walk_permutation_map(el, func, running_data)
+      perms.append(new_perm)
+    return perms, running_data
+  else:
+    return func(p_map, running_data)
   
-  return walk_map(partition_map, 0)[0]
-  
-def compose_permutations(perm_1, perm_2):
+def split_permutations(concatenated_permutations, partition_map):
   """
-  apply permutation 1 first, then permutation 2
+  Given concatenated permutations [0 1 2 0 1 0 2 3 1] and a partition_map, i.e. [[2],[3,4]],
+  split things up into the appropriate tree structure of permutations: [[[0 1]], [[2 0 1], [0 2 3 1]]]
+
+  This is also used to split the p3 column of the P table, where instead of permutations, we are dealing with
+  actual voter selections of candidates. In that case, the partition map should list the max_num_answers,
+  not the total_num_answers.
+
+  assumes that a partition map is either a list of num_anwers (one partition)
+  or a list of lists of num_answers (many partitions)
+  """
+  
+  # a function to extract the permutation when we get to the leaf
+  def subperm(p_map, current_index):
+    new_index = current_index + p_map
+    return concatenated_permutations[current_index:new_index], new_index
+  
+  return walk_permutation_map(partition_map, subperm, 0)[0]
+  
+def compose_permutations(list_of_perms):
+  """
+  apply permutation 1 first, then permutation 2, then...
   both represented as 0-indexed arrays
   """
-  return [perm2[i] for i in perm_1]
+  perm = list_of_perms[0]
+  for p in list_of_perms[1:]:
+    # [2 0 1] o [1 2 0]
+    # apply the next perm
+    perm = [p[i] for i in perm]
+  return perm
+
+def inverse_permutation(perm):
+  """
+  inverse a permutation
+  """
+  # copy it
+  new_perm = range(len(perm))
+  
+  for i in range(len(perm)):
+    new_perm[perm[i]] = i
+    
+  return new_perm
+
+def compose_lists_of_permutations(list_of_perms_1, list_of_perms_2):
+  """
+  two lists of permutations, where corresponding indexes into each need to be composed with one another
+  """
+  return [compose_permutations([list_of_perms_1[i], list_of_perms_2[i]]) for i in range(len(list_of_perms_1))]
+    
+
   
 ##
 ## Data Structures
@@ -64,6 +102,13 @@ class PartitionInfo(object):
     self.sections = {}
     self.partitions = []
     self.id = None
+    
+  def partition_num(self, section_id, question_id):
+    return self.sections[section_id][question_id]
+  
+  @property
+  def num_partitions(self):
+    return len(self.partitions)
   
   def parse(self, etree):
     """
@@ -106,8 +151,10 @@ class Question(object):
     self.type_answer_choice = None
     self.max_num_answers = None
     self.answers = None
+    self.section_id = None
+    self.partition_num = None
     
-  def parse(self, etree):
+  def parse(self, etree, section_id, partition_info):
     """
     parse the answers
     """
@@ -117,6 +164,9 @@ class Question(object):
     
     self.answers = etree.findall('answers/answer')
     self.answers.sort(_compare_positions)
+    
+    self.section_id = section_id
+    self.partition_num = partition_info.partition_num(self.section_id, self.id)
 
 class ElectionSpec(object):
   """
@@ -131,6 +181,15 @@ class ElectionSpec(object):
     
     # a linear list of all the questions, when the sections don't matter
     self.questions = []
+    
+    # a list of questions by partition
+    self.questions_by_partition = []
+    
+  def lookup_question(self, section_id, question_id):
+    return self.sections[section_id][question_id]
+  
+  def lookup_question_from_partition_info(self, q_info):
+    return self.lookup_question(self, q_info['section_id'], q_info['question_id'])
   
   def parse(self, etree):
     self.id = etree.find('electionInfo').attrib['id']
@@ -139,7 +198,10 @@ class ElectionSpec(object):
     if self.partition_info and self.partition_info.id != self.id:
       import pdb; pdb.set_trace()
       raise Exception("election IDs don't match")
-      
+    
+    # initialize the questions_by_partition
+    self.questions_by_partition = [[] for i in range(self.partition_info.num_partitions)]
+    
     # go through each section
     sections = etree.findall('electionInfo/sections/section')
     for s in sections:
@@ -154,9 +216,11 @@ class ElectionSpec(object):
       # go through the questions, create question object
       for q in questions:
         q_object= Question()
-        q_object.parse(q)
+        q_object.parse(q, s.attrib['id'], self.partition_info)
+        
         new_section[q.attrib['id']] = q_object
         self.questions.append(q_object)
+        self.questions_by_partition[q_object.partition_num].append(q_object)
     
     
 class Election(object):
@@ -171,11 +235,34 @@ class Election(object):
     # list of lists of dictionaries, each dictionary contains the question and section IDs
     partitions = self.spec.partition_info.partitions
     
-    import pdb; pdb.set_trace()
-    
     # look up the number of answers for each question within each section
     return [[len(self.spec.sections[q_info['section_id']][q_info['question_id']].answers) for q_info in partition] for partition in partitions]
 
+  @property
+  def partition_map_choices(self):
+    """
+    same as partition map, only with the max num of selected answers for each question,
+    rather than the total num of answers to choose from. Useful for parsing the voter selection.
+    """
+    # list of lists of dictionaries, each dictionary contains the question and section IDs
+    partitions = self.spec.partition_info.partitions
+
+    # look up the number of answers for each question within each section
+    return [[q_info.max_num_answers for q_info in partition] for partition in partitions]
+
+  @property
+  def num_partitions(self):
+    """
+    A list of partition IDs
+    """
+    return len(self.spec.partition_info.partitions)
+  
+  def questions_in_partition(self, partition_num):
+    """
+    list of question objects in a given partition
+    """
+    return self.spec.questions_by_partition[partition_num]
+    
   def parse(self, etree):
     """
     parse from the MeetingOneIn file
@@ -194,6 +281,7 @@ class Table(object):
   
   def __init__(self):
     self.rows = {}
+    self.__permutations_by_row_id = {}
     
   @classmethod
   def process_row(cls, row):
@@ -206,7 +294,23 @@ class Table(object):
         row[f] = [int(el) for el in row[f].split(' ')]
     
     return row
-  
+
+  def get_permutations_by_row_id(self, row_id, pmap):
+    # already computed?
+    if not self.__permutations_by_row_id.has_key(row_id):
+      self.__permutations_by_row_id[row_id] = [split_permutations(self.rows[row_id][perm_field], pmap) for perm_field in self.PERMUTATION_FIELDS]
+
+    return self.__permutations_by_row_id[row_id]
+
+  def get_composed_permutations_by_row_id(self, row_id, pmap):
+    """
+    assume for now that pmap is one-level deep only
+    """
+    perms = self.get_permutations_by_row_id(row_id, pmap)
+    
+    # now compose them
+    
+    
   def parse(self, etree):
     # look for all rows
     for row_el in etree.findall('row'):
@@ -214,11 +318,7 @@ class Table(object):
   
 class PTable(Table):
   PERMUTATION_FIELDS = ['p1', 'p2']
-  
-  def __init__(self):
-    super(PTable, self).__init__()
-    self.__permutations_by_row_id = {}
-    
+      
   @classmethod
   def __check_commitment(cls, commitment_str, row_id, permutation, salt, constant):
     """
@@ -240,12 +340,6 @@ class PTable(Table):
   def check_full_row(self, reveal_row, constant):
     return self.check_c1(reveal_row, constant) and self.check_c2(reveal_row, constant)
     
-  def permutations_by_row_id(self, row_id, pmap):
-    # already computed?
-    if not self.__permutations_by_row_id.has_key(row_id):
-      self.__permutations_by_row_id[row_id] = split_permutations(self.rows[row_id]['p1'], pmap), split_permutations(self.rows[row_id]['p2'], pmap)
-      
-    return self.__permutations_by_row_id[row_id]
 
 class DTable(Table):
   PERMUTATION_FIELDS = ['d2', 'd4']
@@ -276,6 +370,30 @@ class DTable(Table):
   
 class RTable(object):
   pass
+  
+class Ballot(object):
+  """
+  represents the printed ballot information, with commitments and confirmation codes
+  """
+  def __init__(self, etree=None):
+    self.barcode_serial_commitment = None
+    self.web_serial_commitment = None
+    
+    # dictionary of questions, each is a dictionary of symbols
+    self.questions = {}
+    
+    if etree:
+      self.parse(etree)
+  
+  def parse(self, etree):
+    self.barcode_serial_commitment = etree.attrib['barcodeSerialCommitment']
+    self.web_serial_commitment = etree.attrib['webSerialCommitment']
+    
+    for q_el in etree.findall('question'):
+      self.questions[q_el.attrib['id']] = new_q = {}
+      
+      for symbol_el in q_el.findall('symbol'):
+        new_q[symbol_el.attrib['id']] = symbol_el.attrib
 
 ##
 ## some reusable utilities
@@ -339,3 +457,20 @@ def parse_meeting_two_out(meeting_two_out_path):
   etree = ElementTree.parse(meeting_two_out_path)
   
   return parse_database(etree)
+  
+def parse_meeting_two_out_commitments(meeting_two_out_commitments_path):
+  etree = ElementTree.parse(meeting_two_out_commitments_path)
+  
+  # the ballots
+  ballot_elements = etree.findall('database/printCommitments/ballot')
+  
+  return [Ballot(e) for e in ballot_elements]
+  
+def parse_meeting_three_in(meeting_three_in_path):
+  etree = ElementTree.parse(meeting_three_in_path)
+  
+  # it's just a P table
+  p_table = PTable()
+  p_table.parse(etree.find('print'))
+  
+  return p_table

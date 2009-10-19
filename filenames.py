@@ -17,6 +17,11 @@ PARTITIONS = "partitions.xml"
 # second meeting
 MEETING_TWO_IN = "MeetingTwoIn.xml"
 MEETING_TWO_OUT = "MeetingTwoOut.xml"
+MEETING_TWO_OUT_COMMITMENTS = "MeetingTwoOutCommitments.xml"
+
+# third meeting
+MEETING_THREE_IN = "MeetingThreeIn.xml"
+MEETING_THREE_OUT = "MeetingThreeOut.xml"
 
 def file_in_dir(dir, file):
   return dir + "/" + file
@@ -26,4 +31,4 @@ def hash_file(path):
   contents = f.read()
   f.close()
   
-  return hashlib.sha256(contents).hexdigest()
+  return hashlib.sha1(contents).hexdigest()

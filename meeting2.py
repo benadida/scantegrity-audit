@@ -27,6 +27,7 @@ p_table, partitions = parse_meeting_one_out(meeting_one_out_path)
 # second meeting
 meeting_two_in_path = file_in_dir(DATA_PATH, MEETING_TWO_IN)
 meeting_two_out_path = file_in_dir(DATA_PATH, MEETING_TWO_OUT)
+meeting_two_out_commitments_path = file_in_dir(DATA_PATH, MEETING_TWO_OUT_COMMITMENTS)
 
 # get the challenges
 challenge_p_table = parse_meeting_two_in(meeting_two_in_path)
@@ -67,18 +68,29 @@ for p_id, partition in partitions.iteritems():
     # (1) reveals match
     for row_id, response_row in response_d_table.rows.iteritems():
       assert d_table.check_full_row(p_id, d_table_id, response_row, election.constant), "bad d table commitment"
-      print "done %s %s %s" % (p_id, d_table_id, row_id)
     
     # (2) list of p_ids matches
     assert sorted(challenge_row_ids) == sorted([r['pid'] for r in response_d_table.rows.values()])
     
     # (3) permutations
-    for row_id, response_row in respond_d_table.rows.iteritems():
-      d_perm_left, d_perm_right = d_table.get_permutations_by_row_id(row_id)
+    for row_id, response_row in response_d_table.rows.iteritems():
+      d_perm_left, d_perm_right = response_d_table.get_permutations_by_row_id(row_id, partition_map[p_id])
+      
+      p_row_id = response_d_table.rows[row_id]['pid']
       
       # get the corresponding P table permutation subset
+      p_perms_full = response_p_table.get_permutations_by_row_id(p_row_id, partition_map)
+      p_perm_1, p_perm_2 = [perms[p_id] for perms in p_perms_full]
       
-      # compare the composition
+      ## compare the compositions
+      
+      # on the d table, just d2 then d4 to go from coded to decoded
+      d_composed = compose_lists_of_permutations(d_perm_left, d_perm_right)
+      
+      # the composition of the print tables is p_2 o p_1_inv to go from coded to decoded
+      p_composed = compose_lists_of_permutations(p_perm_2, [inverse_permutation(p) for p in p_perm_1])
+      
+      assert d_composed == p_composed, "PERMUTATION PROBLEM %s/%s/%s: %s --- %s" % (p_id, d_table_id, row_id, d_composed, p_composed)
     
 ##
 ## check that the composition of the P table permutations is the same as the composition of corresponding D tables
@@ -87,12 +99,16 @@ for p_id, partition in partitions.iteritems():
 print """Election ID: %s
 Meeting 2 Successful
 
+%s ballots challenged and answered successfully.
+
+FINGERPRINTS
 - Partition File: %s
 - Election Spec: %s
 - Meeting One In: %s
 - Meeting One Out: %s
 - Meeting Two In: %s
 - Meeting Two Out: %s
+- Meeting Two Out Commitments: %s
 
-""" % (election.spec.id, hash_file(partition_file_path), hash_file(election_spec_path), hash_file(meeting_one_in_path),
-      hash_file(meeting_one_out_path), hash_file(meeting_two_in_path), hash_file(meeting_two_out_path))
+""" % (election.spec.id, len(challenge_row_ids), hash_file(partition_file_path), hash_file(election_spec_path), hash_file(meeting_one_in_path),
+      hash_file(meeting_one_out_path), hash_file(meeting_two_in_path), hash_file(meeting_two_out_path), hash_file(meeting_two_out_commitments_path))
