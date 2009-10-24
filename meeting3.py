@@ -43,6 +43,7 @@ challenge_row_ids = challenge_p_table.rows.keys()
 # third meeting
 meeting_three_in_path = file_in_dir(DATA_PATH, MEETING_THREE_IN)
 meeting_three_out_path = file_in_dir(DATA_PATH, MEETING_THREE_OUT)
+meeting_three_out_codes_path = file_in_dir(DATA_PATH, MEETING_THREE_OUT_CODES)
 
 # parse the ballot confirmation code commitments
 ballots = parse_meeting_two_out_commitments(meeting_two_out_commitments_path)
@@ -50,8 +51,14 @@ ballots = parse_meeting_two_out_commitments(meeting_two_out_commitments_path)
 # get the P table of actual votes
 p_table_votes = parse_meeting_three_in(meeting_three_in_path)
 
-import pdb; pdb.set_trace()
+# get the opening of the ballot confirmation code commitments
+ballots_with_codes = parse_meeting_three_out_codes(meeting_three_out_codes_path)
 
+# check the openings
+for ballot_open in ballots_with_codes.values():
+  ballot = ballots[ballot_open.pid]
+  assert ballot.verify_code_openings(ballot_open, election.constant)
+  
 ##
 ## check that the composition of the P table permutations is the same as the composition of corresponding D tables
 ##
@@ -59,7 +66,7 @@ import pdb; pdb.set_trace()
 print """Election ID: %s
 Meeting 3 Successful
 
-%s ballots challenged
+%s ballots cast
 
 FINGERPRINTS
 - Partition File: %s
@@ -71,5 +78,6 @@ FINGERPRINTS
 - Meeting Three In: %s
 - Meeting Three Out: %s
 
-""" % (election.spec.id, len(challenge_row_ids), hash_file(partition_file_path), hash_file(election_spec_path), hash_file(meeting_one_in_path),
-      hash_file(meeting_one_out_path), hash_file(meeting_two_in_path), hash_file(meeting_two_out_path))
+""" % (election.spec.id, len(ballots_with_codes), hash_file(partition_file_path), hash_file(election_spec_path), hash_file(meeting_one_in_path),
+      hash_file(meeting_one_out_path), hash_file(meeting_two_in_path), hash_file(meeting_two_out_path),
+      hash_file(meeting_three_in_path), hash_file(meeting_three_out_path))

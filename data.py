@@ -375,19 +375,33 @@ class Ballot(object):
   """
   represents the printed ballot information, with commitments and confirmation codes
   """
-  def __init__(self, etree=None):
-    self.barcode_serial_commitment = None
-    self.web_serial_commitment = None
-    
+  def __init__(self, etree=None):    
     # dictionary of questions, each is a dictionary of symbols
     self.questions = {}
     
     if etree:
       self.parse(etree)
+      
+  def verify_code_openings(self, open_ballot, constant):
+    """
+    this ballot is the commitment, the other ballot is the opening
+    """
+    
+    # pid match
+    if self.pid != open_ballot.pid:
+      return False
+    
+    # check opening of web serial number
+    if self.webSerialCommitment != commitment.commit(self.pid + " " + open_ballot.webSerial, open_ballot.webSerialSalt, constant):
+      return False
+    
+    # check opening of all marked codes
   
+    return True
+    
   def parse(self, etree):
-    self.barcode_serial_commitment = etree.attrib['barcodeSerialCommitment']
-    self.web_serial_commitment = etree.attrib['webSerialCommitment']
+    # add all of the attributes
+    self.__dict__.update(etree.attrib)
     
     for q_el in etree.findall('question'):
       self.questions[q_el.attrib['id']] = new_q = {}
@@ -457,14 +471,17 @@ def parse_meeting_two_out(meeting_two_out_path):
   etree = ElementTree.parse(meeting_two_out_path)
   
   return parse_database(etree)
-  
-def parse_meeting_two_out_commitments(meeting_two_out_commitments_path):
-  etree = ElementTree.parse(meeting_two_out_commitments_path)
+
+def parse_ballot_table(ballot_table_path):
+  etree = ElementTree.parse(ballot_table_path)
   
   # the ballots
   ballot_elements = etree.findall('database/printCommitments/ballot')
   
-  return [Ballot(e) for e in ballot_elements]
+  return dict([(b.pid, b) for b in [Ballot(e) for e in ballot_elements]])
+  
+def parse_meeting_two_out_commitments(meeting_two_out_commitments_path):
+  return parse_ballot_table(meeting_two_out_commitments_path)
   
 def parse_meeting_three_in(meeting_three_in_path):
   etree = ElementTree.parse(meeting_three_in_path)
@@ -474,3 +491,6 @@ def parse_meeting_three_in(meeting_three_in_path):
   p_table.parse(etree.find('print'))
   
   return p_table
+
+def parse_meeting_three_out_codes(meeting_three_out_codes_path):
+  return parse_ballot_table(meeting_three_out_codes_path)

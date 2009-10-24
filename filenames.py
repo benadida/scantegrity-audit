@@ -22,6 +22,7 @@ MEETING_TWO_OUT_COMMITMENTS = "MeetingTwoOutCommitments.xml"
 # third meeting
 MEETING_THREE_IN = "MeetingThreeIn.xml"
 MEETING_THREE_OUT = "MeetingThreeOut.xml"
+MEETING_THREE_OUT_CODES = "MeetingThreeOutCodes.xml"
 
 def file_in_dir(dir, file):
   return dir + "/" + file
