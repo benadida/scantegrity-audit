@@ -24,12 +24,3 @@ MEETING_THREE_IN = "MeetingThreeIn.xml"
 MEETING_THREE_OUT = "MeetingThreeOut.xml"
 MEETING_THREE_OUT_CODES = "MeetingThreeOutCodes.xml"
 
-def file_in_dir(dir, file):
-  return dir + "/" + file
-
-def hash_file(path):
-  f = open(path, "r")
-  contents = f.read()
-  f.close()
-  
-  return hashlib.sha1(contents).hexdigest()

@@ -458,39 +458,6 @@ def parse_database(etree):
       
   return p_table, partitions
 
-
-def parse_meeting_one_in(partitions_path, election_spec_path, meeting_one_in_path):
-  partition_info = PartitionInfo()
-  partition_info.parse(ElementTree.parse(partitions_path))
-  
-  election_spec = ElectionSpec(partition_info)
-  election_spec.parse(ElementTree.parse(election_spec_path))
-  
-  election = Election(election_spec)
-  election.parse(ElementTree.parse(meeting_one_in_path))
-  
-  return election
-  
-
-def parse_meeting_one_out(meeting_one_out_path):
-  etree = ElementTree.parse(meeting_one_out_path)
-  
-  return parse_database(etree)
-  
-def parse_meeting_two_in(meeting_two_in_path):
-  etree = ElementTree.parse(meeting_two_in_path)
-  
-  # the P table of challenges
-  p_table = PTable()
-  p_table.parse(etree.find('challenges/print'))
-  
-  return p_table
-  
-def parse_meeting_two_out(meeting_two_out_path):
-  etree = ElementTree.parse(meeting_two_out_path)
-  
-  return parse_database(etree)
-
 def parse_ballot_table(ballot_table_path):
   etree = ElementTree.parse(ballot_table_path)
   

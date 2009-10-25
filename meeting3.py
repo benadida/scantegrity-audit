@@ -51,6 +51,9 @@ ballots = parse_meeting_two_out_commitments(meeting_two_out_commitments_path)
 # get the P table of actual votes
 p_table_votes = parse_meeting_three_in(meeting_three_in_path)
 
+# make sure none of the actual votes use ballots that were audited in Meeting2:
+assert set(p_table_votes.rows.keys()).isdisjoint(set(challenge_row_ids))
+
 # get the opening of the ballot confirmation code commitments
 ballots_with_codes = parse_meeting_three_out_codes(meeting_three_out_codes_path)
 
