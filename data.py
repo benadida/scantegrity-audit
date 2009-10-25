@@ -382,9 +382,15 @@ class Ballot(object):
     if etree:
       self.parse(etree)
       
-  def verify_code_openings(self, open_ballot, constant):
+  def verify_code_openings(self, open_ballot, constant, marked_codes_db = None):
     """
-    this ballot is the commitment, the other ballot is the opening
+    this ballot is the commitment, the other ballot is the opening.
+    
+    The marked_codes_db is an object that, if present, should support one method call:
+    marked_codes_db.add_code(web_serial_num, pid, question_id, symbol_id, confirmation_code)
+    
+    This is called only when a code is successfully verified, and enables bookkeeping of
+    codes to show the voters in a verification interface.
     """
     
     # pid match
@@ -396,7 +402,20 @@ class Ballot(object):
       return False
     
     # check opening of all marked codes
+    for q_id, q in open_ballot.questions.iteritems():
+      # the symbols for this ballot
+      committed_symbols = self.questions[q_id]
+      
+      # go through the open symbols
+      for s_id, s in q.iteritems():
+        if committed_symbols[s_id]['c'] != commitment.commit(" ".join([self.pid, q_id, s_id, s['code']]), s['salt'], constant):
+          return False
+          
+        # record the code for this ballot
+        if marked_codes_db:
+          marked_codes_db.add_code(open_ballot.webSerial, self.pid, q_id, s_id, s['code'])          
   
+    # only if all tests pass, then succeed
     return True
     
   def parse(self, etree):

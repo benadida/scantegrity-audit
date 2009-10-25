@@ -59,6 +59,13 @@ for ballot_open in ballots_with_codes.values():
   ballot = ballots[ballot_open.pid]
   assert ballot.verify_code_openings(ballot_open, election.constant)
   
+# we get the half-decrypted votes, but there's nothing to verify yet
+
+# we get the R table, and that can be tallied based on the type of question
+# however, just to separate the cryptographic verification from the actual
+# counting, which should be a lot simpler, the counting of the R table is done
+# in the tally.py program.
+
 ##
 ## check that the composition of the P table permutations is the same as the composition of corresponding D tables
 ##
@@ -68,6 +75,8 @@ Meeting 3 Successful
 
 %s ballots cast
 
+The tally can now be computed, not fully verified yet, using tally.py
+
 FINGERPRINTS
 - Partition File: %s
 - Election Spec: %s
@@ -75,9 +84,11 @@ FINGERPRINTS
 - Meeting One Out: %s
 - Meeting Two In: %s
 - Meeting Two Out: %s
+- Meeting Two Out Commitments: %s
 - Meeting Three In: %s
 - Meeting Three Out: %s
+- Meeting Three Out Codes: %s
 
 """ % (election.spec.id, len(ballots_with_codes), hash_file(partition_file_path), hash_file(election_spec_path), hash_file(meeting_one_in_path),
-      hash_file(meeting_one_out_path), hash_file(meeting_two_in_path), hash_file(meeting_two_out_path),
-      hash_file(meeting_three_in_path), hash_file(meeting_three_out_path))
+      hash_file(meeting_one_out_path), hash_file(meeting_two_in_path), hash_file(meeting_two_out_path), hash_file(meeting_two_out_commitments_path),
+      hash_file(meeting_three_in_path), hash_file(meeting_three_out_path), hash_file(meeting_three_out_codes_path))
