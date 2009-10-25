@@ -69,7 +69,7 @@ for ballot_open in ballots_with_codes.values():
 ##
 ## check that the composition of the P table permutations is the same as the composition of corresponding D tables
 ##
-    
+
 print """Election ID: %s
 Meeting 3 Successful
 
