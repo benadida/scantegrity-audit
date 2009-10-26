@@ -80,9 +80,6 @@ if __name__ == '__main__':
         
         assert d_composed == p_composed, "PERMUTATION PROBLEM %s/%s/%s: %s --- %s" % (p_id, d_table_id, row_id, d_composed, p_composed)
       
-  ##
-  ## check that the composition of the P table permutations is the same as the composition of corresponding D tables
-  ##
       
   print """Election ID: %s
 Meeting 2 Successful

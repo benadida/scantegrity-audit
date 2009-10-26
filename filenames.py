@@ -24,3 +24,6 @@ MEETING_THREE_IN = "MeetingThreeIn.xml"
 MEETING_THREE_OUT = "MeetingThreeOut.xml"
 MEETING_THREE_OUT_CODES = "MeetingThreeOutCodes.xml"
 
+# fourth meeting
+MEETING_FOUR_IN = "MeetingFourIn.xml"
+MEETING_FOUR_OUT = "MeetingFourOut.xml"

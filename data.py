@@ -432,20 +432,17 @@ class Ballot(object):
 ## some reusable utilities
 ##
 
-def parse_database(etree):
-  """
-  parses a P table and a bunch of D tables, which happens a few times
-  
-  The partition_id and instance_id are integers
-  """
-  
+def parse_p_table(etree, path='database/print'):
   # the P table
   p_table = PTable()
-  p_table.parse(etree.find('database/print'))
+  p_table.parse(etree.find(path))
   
+  return p_table
+
+def parse_d_tables(etree, path='database/partition'):
   # the multiple D tables by partition
   partitions = {}
-  partition_elements = etree.findall('database/partition')
+  partition_elements = etree.findall(path)
   
   # go through each partition, each one is a dictionary of D-Table instances keyed by ID
   for partition_el in partition_elements:
@@ -455,28 +452,24 @@ def parse_database(etree):
     for d_table_el in d_table_instances:
       new_partition[int(d_table_el.attrib['id'])] = new_d_table = DTable()
       new_d_table.parse(d_table_el)
+
+  return partitions
+  
+def parse_database(etree):
+  """
+  parses a P table and a bunch of D tables, which happens a few times
+  
+  The partition_id and instance_id are integers
+  """
+  
+  p_table = parse_p_table(etree)
+  partitions = parse_d_tables(etree)
       
   return p_table, partitions
 
-def parse_ballot_table(ballot_table_path):
-  etree = ElementTree.parse(ballot_table_path)
-  
+def parse_ballot_table(etree):
   # the ballots
   ballot_elements = etree.findall('database/printCommitments/ballot')
   
   return dict([(b.pid, b) for b in [Ballot(e) for e in ballot_elements]])
   
-def parse_meeting_two_out_commitments(meeting_two_out_commitments_path):
-  return parse_ballot_table(meeting_two_out_commitments_path)
-  
-def parse_meeting_three_in(meeting_three_in_path):
-  etree = ElementTree.parse(meeting_three_in_path)
-  
-  # it's just a P table
-  p_table = PTable()
-  p_table.parse(etree.find('print'))
-  
-  return p_table
-
-def parse_meeting_three_out_codes(meeting_three_out_codes_path):
-  return parse_ballot_table(meeting_three_out_codes_path)
