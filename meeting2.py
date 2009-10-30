@@ -13,6 +13,7 @@ from meeting1 import *
 meeting_two_in_xml = file_in_dir(DATA_PATH, MEETING_TWO_IN, 'Meeting Two In')
 meeting_two_out_xml = file_in_dir(DATA_PATH, MEETING_TWO_OUT, "Meeting Two Out")
 meeting_two_out_commitments_xml = file_in_dir(DATA_PATH, MEETING_TWO_OUT_COMMITMENTS, "Meeting Two Out Commitments")
+meeting_two_random_data = file_in_dir(DATA_PATH, MEETING_TWO_RANDOM_DATA, "Random Data for Meeting Two Challenges", xml=False)
 
 # get the challenges
 challenge_p_table = PTable()
@@ -24,8 +25,16 @@ response_p_table, response_partitions = parse_database(meeting_two_out_xml)
 challenge_row_ids = challenge_p_table.rows.keys()
 
 # actual meeting two verifications
-if __name__ == '__main__':
+if __name__ == '__main__':  
   p_table_permutations = {}
+  
+  # check the generation of the challenge rows
+  challenge_row_ids_ints = [int(c) for c in challenge_row_ids]
+  
+  # we assume that the length of the challenge list is the right one
+  challenges_match_randomness = False
+  if challenge_row_ids_ints == generate_random_int_list(meeting_two_random_data, election.num_ballots, len(challenge_row_ids)):
+    challenges_match_randomness = True
   
   # check the P table commitments
   for row_id in challenge_row_ids:
@@ -80,11 +89,13 @@ if __name__ == '__main__':
         
         assert d_composed == p_composed, "PERMUTATION PROBLEM %s/%s/%s: %s --- %s" % (p_id, d_table_id, row_id, d_composed, p_composed)
       
-      
+  
   print """Election ID: %s
 Meeting 2 Successful
 
 %s ballots challenged and answered successfully.
 
+Challenges Match Randomness? %s
+
 %s
-""" % (election.spec.id, len(challenge_row_ids), fingerprint_report())
+""" % (election.spec.id, len(challenge_row_ids), str(challenges_match_randomness).upper(), fingerprint_report())

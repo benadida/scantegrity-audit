@@ -18,6 +18,7 @@ PARTITIONS = "partitions.xml"
 MEETING_TWO_IN = "MeetingTwoIn.xml"
 MEETING_TWO_OUT = "MeetingTwoOut.xml"
 MEETING_TWO_OUT_COMMITMENTS = "MeetingTwoOutCommitments.xml"
+MEETING_TWO_RANDOM_DATA = "pre-election-random-data.txt"
 
 # third meeting
 MEETING_THREE_IN = "MeetingThreeIn.xml"
@@ -27,3 +28,4 @@ MEETING_THREE_OUT_CODES = "MeetingThreeOutCodes.xml"
 # fourth meeting
 MEETING_FOUR_IN = "MeetingFourIn.xml"
 MEETING_FOUR_OUT = "MeetingFourOut.xml"
+MEETING_FOUR_RANDOM_DATA = "post-election-random-data.txt"
