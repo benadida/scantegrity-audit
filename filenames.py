@@ -32,3 +32,7 @@ MEETING_FOUR_RANDOM_DATA = "post-election-random-data.txt"
 
 # contested ballots
 CONTESTED_BALLOTS_REPLY = "ReplyToContestedCodes.xml"
+
+# spoiled ballots
+SPOILED_BALLOTS_CODES = "SpoiledBallotsCodes.xml"
+SPOILED_BALLOTS_MIXNET = "SpoiledBallotsMixnet.xml"

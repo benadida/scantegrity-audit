@@ -397,6 +397,11 @@ class Ballot(object):
     if self.pid != open_ballot.pid:
       return False
     
+    # check opening of barcode serial number if it's there
+    if hasattr(open_ballot, 'barcodeSerial') and open_ballot.barcodeSerial != None:
+      if self.barcodeSerialCommitment != commitment.commit(self.pid + " " + open_ballot.barcodeSerial, open_ballot.barcodeSerialSalt, constant):
+        return false
+        
     # check opening of web serial number
     if self.webSerialCommitment != commitment.commit(self.pid + " " + open_ballot.webSerial, open_ballot.webSerialSalt, constant):
       return False
