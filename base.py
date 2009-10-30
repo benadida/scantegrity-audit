@@ -6,9 +6,7 @@ not called directly
 data path should NOT have a trailing slash
 """
 
-from filenames import *
-from data import *
-import sys
+import sys, hashlib
 from xml.etree import ElementTree
 
 if len(sys.argv) > 1:

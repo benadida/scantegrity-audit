@@ -7,26 +7,33 @@ python meeting3.py <DATA_PATH>
 data path should NOT have a trailing slash
 """
 
-from meeting2 import *
+# core imports
+import sys
+import base, data, filenames
+
+# use the meeting1 and meeting2 data structures too
+import meeting1, meeting2
+
+election = meeting1.election
 
 # third meeting
-meeting_three_in_xml = file_in_dir(DATA_PATH, MEETING_THREE_IN, 'Meeting Three In')
-meeting_three_out_xml = file_in_dir(DATA_PATH, MEETING_THREE_OUT, 'Meeting Three Out')
-meeting_three_out_codes_xml = file_in_dir(DATA_PATH, MEETING_THREE_OUT_CODES, 'Meeting Three Out Codes')
+meeting_three_in_xml = base.file_in_dir(base.DATA_PATH, filenames.MEETING_THREE_IN, 'Meeting Three In')
+meeting_three_out_xml = base.file_in_dir(base.DATA_PATH, filenames.MEETING_THREE_OUT, 'Meeting Three Out')
+meeting_three_out_codes_xml = base.file_in_dir(base.DATA_PATH, filenames.MEETING_THREE_OUT_CODES, 'Meeting Three Out Codes')
 
 # parse the ballot confirmation code commitments
-ballots = parse_ballot_table(meeting_two_out_commitments_xml)
+ballots = data.parse_ballot_table(meeting2.meeting_two_out_commitments_xml)
 
 # get the P table of actual votes
-p_table_votes = PTable()
+p_table_votes = data.PTable()
 p_table_votes.parse(meeting_three_in_xml.find('print'))
 
 # get the opening of the ballot confirmation code commitments
-ballots_with_codes = parse_ballot_table(meeting_three_out_codes_xml)
+ballots_with_codes = data.parse_ballot_table(meeting_three_out_codes_xml)
 
-if __name__ == '__main__':
+def verify(output_stream):
   # make sure none of the actual votes use ballots that were audited in Meeting2:
-  assert set(p_table_votes.rows.keys()).isdisjoint(set(challenge_row_ids))
+  assert set(p_table_votes.rows.keys()).isdisjoint(set(meeting2.challenge_row_ids))
   
   # check the openings
   for ballot_open in ballots_with_codes.values():
@@ -40,7 +47,7 @@ if __name__ == '__main__':
   # counting, which should be a lot simpler, the counting of the R table is done
   # in the tally.py program.
   
-  print """Election ID: %s
+  output_stream.write("""Election ID: %s
 Meeting 3 Successful
 
 %s ballots cast
@@ -48,4 +55,7 @@ Meeting 3 Successful
 The tally can now be computed, not fully verified yet, using tally.py
 
 %s
-""" % (election.spec.id, len(ballots_with_codes), fingerprint_report())
+""" % (election.spec.id, len(ballots_with_codes), base.fingerprint_report()))
+
+if __name__ == '__main__':
+  verify(sys.stdout)

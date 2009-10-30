@@ -7,25 +7,33 @@ python meeting2.py <DATA_PATH>
 data path should NOT have a trailing slash
 """
 
-from meeting1 import *
+# core imports
+import sys
+import base, data, filenames
+
+# use the meeting1 data structures too
+import meeting1
+
+# pull in certain data structures from meeting1
+election, p_table, partitions = meeting1.election, meeting1.p_table, meeting1.partitions
 
 # second meeting
-meeting_two_in_xml = file_in_dir(DATA_PATH, MEETING_TWO_IN, 'Meeting Two In')
-meeting_two_out_xml = file_in_dir(DATA_PATH, MEETING_TWO_OUT, "Meeting Two Out")
-meeting_two_out_commitments_xml = file_in_dir(DATA_PATH, MEETING_TWO_OUT_COMMITMENTS, "Meeting Two Out Commitments")
-meeting_two_random_data = file_in_dir(DATA_PATH, MEETING_TWO_RANDOM_DATA, "Random Data for Meeting Two Challenges", xml=False)
+meeting_two_in_xml = base.file_in_dir(base.DATA_PATH, filenames.MEETING_TWO_IN, 'Meeting Two In')
+meeting_two_out_xml = base.file_in_dir(base.DATA_PATH, filenames.MEETING_TWO_OUT, "Meeting Two Out")
+meeting_two_out_commitments_xml = base.file_in_dir(base.DATA_PATH, filenames.MEETING_TWO_OUT_COMMITMENTS, "Meeting Two Out Commitments")
+meeting_two_random_data = base.file_in_dir(base.DATA_PATH, filenames.MEETING_TWO_RANDOM_DATA, "Random Data for Meeting Two Challenges", xml=False)
 
 # get the challenges
-challenge_p_table = PTable()
+challenge_p_table = data.PTable()
 challenge_p_table.parse(meeting_two_in_xml.find('challenges/print'))
 
 # get the response
-response_p_table, response_partitions = parse_database(meeting_two_out_xml)
+response_p_table, response_partitions = data.parse_database(meeting_two_out_xml)
 
 challenge_row_ids = challenge_p_table.rows.keys()
 
 # actual meeting two verifications
-if __name__ == '__main__':  
+def verify(output_stream):  
   p_table_permutations = {}
   
   # check the generation of the challenge rows
@@ -33,7 +41,7 @@ if __name__ == '__main__':
   
   # we assume that the length of the challenge list is the right one
   challenges_match_randomness = False
-  if challenge_row_ids_ints == set(generate_random_int_list(meeting_two_random_data, election.num_ballots, len(challenge_row_ids))):
+  if challenge_row_ids_ints == set(base.generate_random_int_list(meeting_two_random_data, election.num_ballots, len(challenge_row_ids))):
     challenges_match_randomness = True
   
   # check the P table commitments
@@ -82,10 +90,10 @@ if __name__ == '__main__':
         ## compare the compositions
         
         # on the d table, just d2 then d4 to go from coded to decoded
-        d_composed = compose_lists_of_permutations(d_perm_left, d_perm_right)
+        d_composed = data.compose_lists_of_permutations(d_perm_left, d_perm_right)
         
         # the composition of the print tables is p_2 o p_1_inv to go from coded to decoded
-        p_composed = compose_lists_of_permutations(p_perm_2, [inverse_permutation(p) for p in p_perm_1])
+        p_composed = data.compose_lists_of_permutations(p_perm_2, [data.inverse_permutation(p) for p in p_perm_1])
         
         assert d_composed == p_composed, "PERMUTATION PROBLEM %s/%s/%s: %s --- %s" % (p_id, d_table_id, row_id, d_composed, p_composed)
       
@@ -98,4 +106,7 @@ Meeting 2 Successful
 Challenges Match Randomness? %s
 
 %s
-""" % (election.spec.id, len(challenge_row_ids), str(challenges_match_randomness).upper(), fingerprint_report())
+""" % (election.spec.id, len(challenge_row_ids), str(challenges_match_randomness).upper(), base.fingerprint_report())
+
+if __name__ == '__main__':
+  verify(sys.stdout)
