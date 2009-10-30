@@ -29,3 +29,6 @@ MEETING_THREE_OUT_CODES = "MeetingThreeOutCodes.xml"
 MEETING_FOUR_IN = "MeetingFourIn.xml"
 MEETING_FOUR_OUT = "MeetingFourOut.xml"
 MEETING_FOUR_RANDOM_DATA = "post-election-random-data.txt"
+
+# contested ballots
+CONTESTED_BALLOTS_REPLY = "ReplyToContestedCodes.xml"

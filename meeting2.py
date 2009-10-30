@@ -29,11 +29,11 @@ if __name__ == '__main__':
   p_table_permutations = {}
   
   # check the generation of the challenge rows
-  challenge_row_ids_ints = [int(c) for c in challenge_row_ids]
+  challenge_row_ids_ints = set([int(c) for c in challenge_row_ids])
   
   # we assume that the length of the challenge list is the right one
   challenges_match_randomness = False
-  if challenge_row_ids_ints == generate_random_int_list(meeting_two_random_data, election.num_ballots, len(challenge_row_ids)):
+  if challenge_row_ids_ints == set(generate_random_int_list(meeting_two_random_data, election.num_ballots, len(challenge_row_ids))):
     challenges_match_randomness = True
   
   # check the P table commitments

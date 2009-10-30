@@ -39,7 +39,6 @@ if __name__ == "__main__":
           assert d_table.check_cr(p_id, instance_id, d_table_response.rows[row['id']], election.constant)          
         
     
-if __name__ == '__main__':
   print """Election ID: %s
 Meeting 4 Successful
 

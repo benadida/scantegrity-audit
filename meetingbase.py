@@ -11,7 +11,10 @@ from data import *
 import sys
 from xml.etree import ElementTree
 
-DATA_PATH = sys.argv[1] or "testdata"
+if len(sys.argv) > 1:
+  DATA_PATH = sys.argv[1]
+else:
+  DATA_PATH = "testdata"
 
 FINGERPRINTS = []
 
