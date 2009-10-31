@@ -143,7 +143,7 @@ class PartitionInfo(object):
     # index the questions by partition
     for s_id, section in self.sections.iteritems():
       for q_id, q_partition in section.iteritems():
-        self.partitions[q_partition].append({'section_id': s_id, 'question_id': q_id})
+        self.partitions[int(q_partition)].append({'section_id': s_id, 'question_id': q_id})
         
     # we're assuming here that the ordering within the partitions is correct
     # because the documentation says nothing more
@@ -284,6 +284,7 @@ class Table(object):
   
   # fields that are to be interpreted as permutations
   PERMUTATION_FIELDS = []
+  INTEGER_FIELDS = ['id']
   
   def __init__(self):
     self.id = None
@@ -321,10 +322,15 @@ class Table(object):
   def parse(self, etree):
     if etree.attrib.has_key('id'):
       self.id = int(etree.attrib['id'])
-      
+    
     # look for all rows
     for row_el in etree.findall('row'):
-      self.rows[row_el.attrib['id']] = self.process_row(row_el.attrib)
+      self.rows[int(row_el.attrib['id'])] = new_row = self.process_row(row_el.attrib)      
+      
+      # convert fields to ints when it matters
+      for k in self.INTEGER_FIELDS:
+        if new_row.has_key(k):
+          new_row[k] = int(new_row[k])
   
 class PTable(Table):
   PERMUTATION_FIELDS = ['p1', 'p2']
@@ -335,7 +341,7 @@ class PTable(Table):
     check the reveal of a commitment to a permutation,
     """
     # prepare the string that we are committing to
-    message = row_id
+    message = str(row_id)
     message += ''.join([chr(el) for el in permutation])
 
     # reperform commitment and check equality
@@ -353,6 +359,7 @@ class PTable(Table):
 
 class DTable(Table):
   PERMUTATION_FIELDS = ['d2', 'd4']
+  INTEGER_FIELDS = ['id', 'pid', 'rid']
 
   @classmethod
   def __check_commitment(cls, commitment_str, partition_id, instance_id, row_id, external_id, permutation, salt, constant):
@@ -361,7 +368,7 @@ class DTable(Table):
     the "external_id" is the reference to the other table, either pid or rid
     """
     # prepare the string that we are committing to
-    message = chr(partition_id) + chr(instance_id) + row_id + external_id
+    message = chr(partition_id) + chr(instance_id) + str(row_id) + str(external_id)
     message += ''.join([chr(el) for el in permutation])
 
     # reperform commitment and check equality
@@ -378,7 +385,7 @@ class DTable(Table):
   def check_full_row(self, *args):
     return self.check_cl(*args) and self.check_cr(*args)
   
-class RTable(object):
+class RTable(Table):
   pass
   
 class Ballot(object):
@@ -481,7 +488,7 @@ def parse_r_tables(etree, path='database/partition'):
     r_table = RTable()
     r_table.parse(r_table_el)
     
-    partitions[int(partition_el.attrib['id'])] = r_table
+    partitions[partition_el.attrib['id']] = r_table
 
   return partitions
   
