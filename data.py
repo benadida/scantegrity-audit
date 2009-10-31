@@ -187,6 +187,7 @@ class ElectionSpec(object):
     
     # a linear list of all the questions, when the sections don't matter
     self.questions = []
+    self.questions_by_id = {}
     
     # a list of questions by partition
     self.questions_by_partition = []
@@ -227,6 +228,7 @@ class ElectionSpec(object):
         new_section[q.attrib['id']] = q_object
         self.questions.append(q_object)
         self.questions_by_partition[q_object.partition_num].append(q_object)
+        self.questions_by_id[q_object.id] = q_object
     
     
 class Election(object):
@@ -254,7 +256,7 @@ class Election(object):
     partitions = self.spec.partition_info.partitions
 
     # look up the number of answers for each question within each section
-    return [[q_info.max_num_answers for q_info in partition] for partition in partitions]
+    return [[self.spec.sections[q_info['section_id']][q_info['question_id']].max_num_answers for q_info in partition] for partition in partitions]
 
   @property
   def num_partitions(self):
@@ -386,7 +388,7 @@ class DTable(Table):
     return self.check_cl(*args) and self.check_cr(*args)
   
 class RTable(Table):
-  pass
+  PERMUTATION_FIELDS = ['r']
   
 class Ballot(object):
   """
@@ -488,7 +490,7 @@ def parse_r_tables(etree, path='database/partition'):
     r_table = RTable()
     r_table.parse(r_table_el)
     
-    partitions[partition_el.attrib['id']] = r_table
+    partitions[int(partition_el.attrib['id'])] = r_table
 
   return partitions
   

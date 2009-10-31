@@ -10,21 +10,11 @@ data path should NOT have a trailing slash
 import sys
 import base, data, filenames
 
+# base election params
+from electionparams import *
+
 # get the election data
-partition_xml = base.file_in_dir(base.DATA_PATH, filenames.PARTITIONS, 'Partition File')
-election_xml = base.file_in_dir(base.DATA_PATH, filenames.ELECTION_SPEC, 'Election Spec')
-meeting_one_in_xml = base.file_in_dir(base.DATA_PATH, filenames.MEETING_ONE_IN, 'Meeting One In')
 meeting_one_out_xml = base.file_in_dir(base.DATA_PATH, filenames.MEETING_ONE_OUT, "Meeting One Out")
-
-# parse
-partition_info = data.PartitionInfo()
-partition_info.parse(partition_xml)
-
-election_spec = data.ElectionSpec(partition_info)
-election_spec.parse(election_xml)
-
-election = data.Election(election_spec)
-election.parse(meeting_one_in_xml)
 
 # get the p table and d tables
 p_table, partitions = data.parse_database(meeting_one_out_xml)
