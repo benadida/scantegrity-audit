@@ -40,9 +40,11 @@ for p_id, r_table in r_tables.iteritems():
     # go through the questions
     for q_num, question in enumerate(election.spec.questions_by_partition[p_id]):
       # index 0 because there is only one permutation field in this table,
-      # but it's returned as a list
+      # but it's returned as a list, so we select the first and only one,
+      # then select the specific question number
       raw_answer = split_result[0][q_num]
       
+      # instantiate the right ballot type
       ballot = tallydata.BALLOTS_BY_TYPE[question.type_answer_choice](raw_answer)
       
       BALLOTS[question.id].append(ballot)
@@ -50,8 +52,10 @@ for p_id, r_table in r_tables.iteritems():
 # now tally
 TALLIES = {}
 
-for q_id in BALLOTS.keys():
+RESULTS = ""
+for q_id in sorted(BALLOTS.keys()):
   TALLIES[q_id] = BALLOTS[q_id][0].tally(election.spec.questions_by_id[q_id], BALLOTS[q_id])
+  RESULTS += "Question %s: %s\n" % (q_id, TALLIES[q_id])
 
 def tally(output_stream):
   
@@ -60,7 +64,9 @@ Tally
 
 %s ballots cast
 
-""" % (election.spec.id, len(r_tables[0].rows)))
+%s
+
+""" % (election.spec.id, len(r_tables[0].rows), RESULTS))
 
 if __name__ == '__main__':
   tally(sys.stdout)

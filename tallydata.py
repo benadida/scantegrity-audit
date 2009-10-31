@@ -12,6 +12,7 @@ class RankBallot(object):
   def __init__(self, raw_data):
     # split the raw data into array of choices
     self.choices = raw_data
+    self.exhausted = False
     
     self.reset()
 
@@ -22,7 +23,7 @@ class RankBallot(object):
     if self.current_choice == choice_to_cancel: 
       self.__current_index += 1
     
-      if not self.current_choice:
+      if self.current_choice == None:
         self.exhausted = True
   
   @property
@@ -33,11 +34,14 @@ class RankBallot(object):
     if len(self.choices) <= self.__current_index:
       return None
       
+    if self.choices[self.__current_index] == -1:
+      return None
+      
     return self.choices[self.__current_index]
     
   def reset(self):
     self.__current_index = 0
-    self.exhausted = False
+    self.exhausted = (self.current_choice == None)
     
   @classmethod
   def tally(cls, question, ballots):
@@ -62,8 +66,9 @@ class RankBallot(object):
           if not b.exhausted:
             candidate_tallies[b.current_choice] += 1
       except Exception, e:
-        print 
         import pdb; pdb.set_trace()
+        bad_ballot = b
+        print "oy"
       
       print candidate_tallies
 
@@ -79,7 +84,26 @@ class RankBallot(object):
         b.go_next_choice(lowest_count_index)
     
     return candidate_tallies
+
+class SimpleBallot(object):
+  def __init__(self, raw_data):
+    # split the raw data into array of choices
+    self.choices = raw_data
+
+  @classmethod
+  def tally(cls, question, ballots):
+    """
+    tally a bunch of ballots where choices are just single or multi candidate.
+    """
+    candidate_tallies = [0] * len(question.answers)
+    
+    for b in ballots:
+      for option in b.choices:
+        candidate_tallies[option] += 1
+    
+    return candidate_tallies
+  
       
 BALLOTS_BY_TYPE['rank'] = RankBallot
-BALLOTS_BY_TYPE['one_answer'] = RankBallot
-BALLOTS_BY_TYPE['multiple_answers'] = RankBallot
+BALLOTS_BY_TYPE['one_answer'] = SimpleBallot
+BALLOTS_BY_TYPE['multiple_answers'] = SimpleBallot
