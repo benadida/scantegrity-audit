@@ -25,9 +25,35 @@ def sort_by_id(elements):
 ## Permutations
 ##
 
+class Permutation(object):
+  def __init__(self, array_representation):
+    self.__permutation = array_representation
+  
+  def __getitem__(self, item):
+    return self.__permutation[item]
+    
+  def __add__(self, other):
+    new_array_rep = [other[i] for i in self.__permutation]
+    return Permutation(new_array_rep)
+  
+  def __invert__(self):
+    new_array_rep = [None] * len(self.__permutation)
+    for i, value in enumerate(self.__permutation):
+      new_array_rep[value] = i
+    return Permutation(new_array_rep)    
+  
+  def __str__(self):
+    return str(self.__permutation)
+  
+  def __eq__(self, other):
+    return self.__permutation == other.__permutation
+    
+  def permute_list(self, lst):
+    return [self[e] for e in lst]
+
 def walk_permutation_map(p_map, func, running_data):
   """
-  walk a permutation map and apply a func at the base, with extra args
+  walk a permutation map and apply a func at the leaf, with extra args
   passed and returned along the way
   """
   # this is uglier than it needs to be because of weird Python local variable
@@ -47,50 +73,26 @@ def split_permutations(concatenated_permutations, partition_map):
   Given concatenated permutations [0 1 2 0 1 0 2 3 1] and a partition_map, i.e. [[2],[3,4]],
   split things up into the appropriate tree structure of permutations: [[[0 1]], [[2 0 1], [0 2 3 1]]]
 
-  This is also used to split the p3 column of the P table, where instead of permutations, we are dealing with
-  actual voter selections of candidates. In that case, the partition map should list the max_num_answers,
-  not the total_num_answers.
-
-  assumes that a partition map is either a list of num_anwers (one partition)
-  or a list of lists of num_answers (many partitions)
+  This is also used to split the p3 column of the P table and the d3 column of the D table,
+  where instead of permutations, we are dealing with actual voter selections of candidates.
+  In that case, the partition map should list the max_num_answers, not the total_num_answers.
   """
   
   # a function to extract the permutation when we get to the leaf
+  # current_index is the running_data that keeps track of where we are
+  # in the tree. Note that this assumes depth-first traversal, without
+  # parallelization (likely a safe assumption.)
   def subperm(p_map, current_index):
     new_index = current_index + p_map
     return concatenated_permutations[current_index:new_index], new_index
   
   return walk_permutation_map(partition_map, subperm, 0)[0]
   
-def compose_permutations(list_of_perms):
-  """
-  apply permutation 1 first, then permutation 2, then...
-  both represented as 0-indexed arrays
-  """
-  perm = list_of_perms[0]
-  for p in list_of_perms[1:]:
-    # [2 0 1] o [1 2 0]
-    # apply the next perm
-    perm = [p[i] for i in perm]
-  return perm
-
-def inverse_permutation(perm):
-  """
-  inverse a permutation
-  """
-  # copy it
-  new_perm = range(len(perm))
-  
-  for i in range(len(perm)):
-    new_perm[perm[i]] = i
-    
-  return new_perm
-
 def compose_lists_of_permutations(list_of_perms_1, list_of_perms_2):
   """
   two lists of permutations, where corresponding indexes into each need to be composed with one another
   """
-  return [compose_permutations([list_of_perms_1[i], list_of_perms_2[i]]) for i in range(len(list_of_perms_1))]
+  return [perm1_el + list_of_perms_2[i] for i, perm1_el in enumerate(list_of_perms_1)]
     
 
   

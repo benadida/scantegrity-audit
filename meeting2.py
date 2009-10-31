@@ -73,23 +73,29 @@ def verify_open_p_and_d_tables(election, committed_p_table, committed_partitions
       
       # (3) permutations
       for row_id, response_row in response_d_table.rows.iteritems():
-        d_perm_left, d_perm_right = response_d_table.get_permutations_by_row_id(row_id, partition_map[p_id])
+        # perms contains the d2 and d4 fields, each of which is a list of permutations,
+        # so we have a list of lists of permutations
+        perms = response_d_table.get_permutations_by_row_id(row_id, partition_map[p_id])
+        d_perm_left = [data.Permutation(p) for p in perms[0]]
+        d_perm_right = [data.Permutation(p) for p in perms[1]]
         
         p_row_id = response_d_table.rows[row_id]['pid']
         
         # get the corresponding P table permutation subset
+        # P also has two permutation fields, each of which is a list of permutations
+        # once parsed, an additional layer is inserted, the index by partition_id
         p_perms_full = open_p_table.get_permutations_by_row_id(p_row_id, partition_map)
-        p_perm_1, p_perm_2 = [perms[p_id] for perms in p_perms_full]
-        
-        ## compare the compositions
-        
+        p_perm_1 = [data.Permutation(perms) for perms in p_perms_full[0][p_id]]
+        p_perm_2 = [data.Permutation(perms) for perms in p_perms_full[1][p_id]]
+
         # on the d table, just d2 then d4 to go from coded to decoded
         d_composed = data.compose_lists_of_permutations(d_perm_left, d_perm_right)
         
         # the composition of the print tables is p_2 o p_1_inv to go from coded to decoded
-        p_composed = data.compose_lists_of_permutations(p_perm_2, [data.inverse_permutation(p) for p in p_perm_1])
+        p_composed = data.compose_lists_of_permutations(p_perm_2, [~p for p in p_perm_1])
         
         if d_composed != p_composed:
+          import pdb; pdb.set_trace()
           return False
   
   # if we make it to here, it's good
