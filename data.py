@@ -14,7 +14,13 @@ def _compare_positions(element_1, element_2):
   misspelled in the spec as 'possition'
   """
   return cmp(int(element_1.attrib['possition']), int(element_2.attrib['possition']))
+  
+def _compare_id(e1, e2):
+  return cmp(int(e1.id), int(e2.id))
 
+def sort_by_id(elements):
+  return sorted(elements, _compare_id)
+  
 ##
 ## Permutations
 ##
@@ -280,6 +286,7 @@ class Table(object):
   PERMUTATION_FIELDS = []
   
   def __init__(self):
+    self.id = None
     self.rows = {}
     self.__permutations_by_row_id = {}
     
@@ -312,6 +319,9 @@ class Table(object):
     
     
   def parse(self, etree):
+    if etree.attrib.has_key('id'):
+      self.id = int(etree.attrib['id'])
+      
     # look for all rows
     for row_el in etree.findall('row'):
       self.rows[row_el.attrib['id']] = self.process_row(row_el.attrib)
@@ -452,7 +462,7 @@ def parse_d_tables(etree, path='database/partition'):
   # go through each partition, each one is a dictionary of D-Table instances keyed by ID
   for partition_el in partition_elements:
     partitions[int(partition_el.attrib['id'])] = new_partition = {}
-    
+
     d_table_instances = partition_el.findall('decrypt/instance')
     for d_table_el in d_table_instances:
       new_partition[int(d_table_el.attrib['id'])] = new_d_table = DTable()
