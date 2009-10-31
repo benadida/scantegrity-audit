@@ -469,6 +469,21 @@ def parse_d_tables(etree, path='database/partition'):
       new_d_table.parse(d_table_el)
 
   return partitions
+
+def parse_r_tables(etree, path='database/partition'):
+  # the multiple D tables by partition
+  partitions = {}
+  partition_elements = etree.findall(path)
+  
+  # go through each partition, each one is a dictionary of D-Table instances keyed by ID
+  for partition_el in partition_elements:
+    r_table_el = partition_el.find('results')
+    r_table = RTable()
+    r_table.parse(r_table_el)
+    
+    partitions[int(partition_el.attrib['id'])] = r_table
+
+  return partitions
   
 def parse_database(etree):
   """

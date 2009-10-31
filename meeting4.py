@@ -22,13 +22,15 @@ meeting_four_random_data = base.file_in_dir(base.DATA_PATH, filenames.MEETING_FO
 # from meeting1 and meeting 2
 election, d_table_commitments, already_open_d_tables = meeting1.election, meeting1.partitions, meeting2.response_partitions
 
-# from meeting3, the D tables with intermediately decrypted votes
+# from meeting3, the D tables with intermediate decrypted votes
 cast_ballot_partitions = data.parse_d_tables(meeting3.meeting_three_out_xml)
-
 
 # challenge and response to those rows
 d_table_challenges = data.parse_d_tables(meeting_four_in_xml)
 d_table_responses = data.parse_d_tables(meeting_four_out_xml)
+
+# r tables
+r_tables_by_partition = data.parse_r_tables(meeting3.meeting_three_out_xml)
 
 def verify(output_stream):
   # verify that challenges are appropriately generated
@@ -75,8 +77,10 @@ def verify(output_stream):
         # check the appropriate side  
         if row['side'] == 'LEFT':
           assert d_table.check_cl(p_id, instance_id, d_table_response.rows[row['id']], election.constant)
+          # FIXME: check that permutation probably transforms P-table row into this row
         else:
           assert d_table.check_cr(p_id, instance_id, d_table_response.rows[row['id']], election.constant)          
+          # FIXME: check that permutation probably transforms this row into R-table row
         
     
   output_stream.write("""Election ID: %s
