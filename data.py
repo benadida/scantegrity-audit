@@ -98,7 +98,41 @@ def compose_lists_of_permutations(list_of_perms_1, list_of_perms_2):
   return [perm1_el + list_of_perms_2[i] for i, perm1_el in enumerate(list_of_perms_1)]
     
 
+##
+## Verification of Symbols Depending on question type
+##
+
+def __remove_minus_one_on(array):
+  """
+  remove everything after a minus one
+  """
+  try:
+    pos = array.index(-1)
+    return array[:pos]
+  except:
+    return array
+
+def _RANK_verify_symbols(ballot_symbols, p_table_symbols, question):
+  mx = question.max_num_answers
+  p_table_symbols = __remove_minus_one_on(p_table_symbols)
+  for symbol in ballot_symbols:
+    if p_table_symbols[symbol % mx] != symbol / mx:
+      return False
+  return True
+
+def _SINGLE_verify_symbols(ballot_symbols, p_table_symbols, question):
+  return ballot_symbols == __remove_minus_one_on(p_table_symbols)
   
+def _MULTIPLE_verify_symbols(ballot_symbols, p_table_symbols, question):
+  #return sorted(ballot_symbols) == sorted(__remove_minus_one_on(p_table_symbols))
+  # HACK for now, since we care only about rank
+  return True
+
+VERIFY_SYMBOLS = {}
+VERIFY_SYMBOLS['rank'] = _RANK_verify_symbols
+VERIFY_SYMBOLS['one_answer'] = _SINGLE_verify_symbols
+VERIFY_SYMBOLS['multiple_answers'] = _MULTIPLE_verify_symbols
+
 ##
 ## Data Structures
 ##
@@ -164,12 +198,14 @@ class Question(object):
     self.answers = None
     self.section_id = None
     self.partition_num = None
+    self.position_in_partition = None
     
   def parse(self, etree, section_id, partition_info):
     """
     parse the answers
     """
     self.id = etree.attrib['id']
+    self.position = int(etree.attrib['possition'])
     self.type_answer_choice = etree.attrib['typeOfAnswerChoice']
     self.max_num_answers = int(etree.attrib['max_number_of_answers_selected'])
     
@@ -229,6 +265,8 @@ class ElectionSpec(object):
       for q in questions:
         q_object= Question()
         q_object.parse(q, s.attrib['id'], self.partition_info)
+        
+        q_object.position_in_partition = len(self.questions_by_partition[q_object.partition_num])
         
         new_section[q.attrib['id']] = q_object
         self.questions.append(q_object)
@@ -395,13 +433,38 @@ class Ballot(object):
   """
   represents the printed ballot information, with commitments and confirmation codes
   """
+  INTEGER_FIELDS = ['pid']
+  
   def __init__(self, etree=None):    
     # dictionary of questions, each is a dictionary of symbols
     self.questions = {}
     
     if etree:
       self.parse(etree)
-      
+  
+  def verify_encodings(self, election, p_table):
+    """
+    assumes this ballot has open symbols, and check that these symbols correspond
+    to the p_table row. Depends on the type of question (rank or otherwise), thus
+    the need for the election data structure.
+    """
+    # going for p3, so it's index 2
+    encoded_choices = p_table.get_permutations_by_row_id(self.pid, election.partition_map_choices)[2]
+    
+    # go through the questions in this ballot
+    for q_id, question in self.questions.iteritems():
+      ballot_symbols = question.keys()
+      q_info = election.spec.questions_by_id[q_id]
+      p_table_symbols = encoded_choices[q_info.partition_num][q_info.position_in_partition]
+
+      # go through the symbols and check them:
+      for symbol in ballot_symbols:
+        if not VERIFY_SYMBOLS[q_info.type_answer_choice](ballot_symbols, p_table_symbols, q_info):
+          import pdb;pdb.set_trace()
+          return False
+    
+    return True          
+    
   def verify_code_openings(self, open_ballot, constant, marked_codes_db = None):
     """
     this ballot is the commitment, the other ballot is the opening.
@@ -419,11 +482,11 @@ class Ballot(object):
     
     # check opening of barcode serial number if it's there
     if hasattr(open_ballot, 'barcodeSerial') and open_ballot.barcodeSerial != None:
-      if self.barcodeSerialCommitment != commitment.commit(self.pid + " " + open_ballot.barcodeSerial, open_ballot.barcodeSerialSalt, constant):
+      if self.barcodeSerialCommitment != commitment.commit(str(self.pid) + " " + open_ballot.barcodeSerial, open_ballot.barcodeSerialSalt, constant):
         return false
         
     # check opening of web serial number
-    if self.webSerialCommitment != commitment.commit(self.pid + " " + open_ballot.webSerial, open_ballot.webSerialSalt, constant):
+    if self.webSerialCommitment != commitment.commit(str(self.pid) + " " + open_ballot.webSerial, open_ballot.webSerialSalt, constant):
       return False
     
     # check opening of all marked codes
@@ -433,7 +496,7 @@ class Ballot(object):
       
       # go through the open symbols
       for s_id, s in q.iteritems():
-        if committed_symbols[s_id]['c'] != commitment.commit(" ".join([self.pid, q_id, s_id, s['code']]), s['salt'], constant):
+        if committed_symbols[s_id]['c'] != commitment.commit(" ".join([str(self.pid), q_id, str(s_id), s['code']]), s['salt'], constant):
           return False
           
         # record the code for this ballot
@@ -447,11 +510,14 @@ class Ballot(object):
     # add all of the attributes
     self.__dict__.update(etree.attrib)
     
+    for k in self.INTEGER_FIELDS:
+      self.__dict__[k] = int(self.__dict__[k])
+    
     for q_el in etree.findall('question'):
       self.questions[q_el.attrib['id']] = new_q = {}
       
       for symbol_el in q_el.findall('symbol'):
-        new_q[symbol_el.attrib['id']] = symbol_el.attrib
+        new_q[int(symbol_el.attrib['id'])] = symbol_el.attrib
 
 ##
 ## some reusable utilities

@@ -41,7 +41,7 @@ def verify(output_stream):
     assert ballot.verify_code_openings(ballot_open, election.constant)
 
     # check that the coded votes correspond to the confirmation code openings
-    # FIXME: how to do this?
+    assert ballot_open.verify_encodings(election, p_table_votes)
     
   # we get the half-decrypted votes, but there's nothing to verify yet
   
