@@ -14,7 +14,7 @@ import base, data, filenames
 # use the meeting1 and meeting2 data structures too
 import meeting1, meeting2
 
-election = meeting1.election
+election, committed_p_table = meeting1.election, meeting1.p_table
 
 # third meeting
 meeting_three_in_xml = base.file_in_dir(base.DATA_PATH, filenames.MEETING_THREE_IN, 'Meeting Three In')
@@ -39,6 +39,9 @@ def verify(output_stream):
   for ballot_open in ballots_with_codes.values():
     ballot = ballots[ballot_open.pid]
     assert ballot.verify_code_openings(ballot_open, election.constant)
+
+    # check that the coded votes correspond to the confirmation code openings
+    # FIXME: how to do this?
     
   # we get the half-decrypted votes, but there's nothing to verify yet
   

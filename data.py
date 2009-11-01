@@ -30,6 +30,9 @@ class Permutation(object):
     self.__permutation = array_representation
   
   def __getitem__(self, item):
+    # if it's a non-position, the permutation doesn't touch it
+    if item == -1:
+      return -1
     return self.__permutation[item]
     
   def __add__(self, other):
@@ -310,18 +313,14 @@ class Table(object):
   def get_permutations_by_row_id(self, row_id, pmap):
     # already computed?
     if not self.__permutations_by_row_id.has_key(row_id):
-      self.__permutations_by_row_id[row_id] = [split_permutations(self.rows[row_id][perm_field], pmap) for perm_field in self.PERMUTATION_FIELDS]
+      self.__permutations_by_row_id[row_id] = new_row = []
+      for perm_field in self.PERMUTATION_FIELDS:
+        if self.rows[row_id].has_key(perm_field):
+          new_row.append(split_permutations(self.rows[row_id][perm_field], pmap))
+        else:
+          new_row.append(None)
 
     return self.__permutations_by_row_id[row_id]
-
-  def get_composed_permutations_by_row_id(self, row_id, pmap):
-    """
-    assume for now that pmap is one-level deep only
-    """
-    perms = self.get_permutations_by_row_id(row_id, pmap)
-    
-    # now compose them
-    
     
   def parse(self, etree):
     if etree.attrib.has_key('id'):
@@ -337,7 +336,7 @@ class Table(object):
           new_row[k] = int(new_row[k])
   
 class PTable(Table):
-  PERMUTATION_FIELDS = ['p1', 'p2']
+  PERMUTATION_FIELDS = ['p1', 'p2', 'p3']
       
   @classmethod
   def __check_commitment(cls, commitment_str, row_id, permutation, salt, constant):
@@ -362,7 +361,7 @@ class PTable(Table):
     
 
 class DTable(Table):
-  PERMUTATION_FIELDS = ['d2', 'd4']
+  PERMUTATION_FIELDS = ['d2', 'd3', 'd4']
   INTEGER_FIELDS = ['id', 'pid', 'rid']
 
   @classmethod

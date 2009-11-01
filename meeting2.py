@@ -73,11 +73,11 @@ def verify_open_p_and_d_tables(election, committed_p_table, committed_partitions
       
       # (3) permutations
       for row_id, response_row in response_d_table.rows.iteritems():
-        # perms contains the d2 and d4 fields, each of which is a list of permutations,
+        # perms contains the d2, d3, and d4 fields, each of which is a list of permutations,
         # so we have a list of lists of permutations
         perms = response_d_table.get_permutations_by_row_id(row_id, partition_map[p_id])
         d_perm_left = [data.Permutation(p) for p in perms[0]]
-        d_perm_right = [data.Permutation(p) for p in perms[1]]
+        d_perm_right = [data.Permutation(p) for p in perms[2]]
         
         p_row_id = response_d_table.rows[row_id]['pid']
         

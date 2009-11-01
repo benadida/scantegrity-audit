@@ -21,6 +21,7 @@ meeting_four_random_data = base.file_in_dir(base.DATA_PATH, filenames.MEETING_FO
 
 # from meeting1 and meeting 2
 election, d_table_commitments, already_open_d_tables = meeting1.election, meeting1.partitions, meeting2.response_partitions
+p_table_votes = meeting3.p_table_votes
 
 # from meeting3, the D tables with intermediate decrypted votes
 cast_ballot_partitions = data.parse_d_tables(meeting3.meeting_three_out_xml)
@@ -58,6 +59,9 @@ def verify(output_stream):
       expected_challenge_sides[p_id][instance_id] = ("LEFT","RIGHT")[base.prng(seed,counter,2)]
       counter += 1
   
+  partition_map = election.partition_map
+  partition_map_choices = election.partition_map_choices
+  
   # go through the challenges and verify the corresponding commitments
   for p_id, partition in d_table_challenges.iteritems():
     for instance_id, d_table_challenge in partition.iteritems():
@@ -73,15 +77,36 @@ def verify(output_stream):
         # does it match the randomness?
         if row['side'] != expected_challenge_sides[p_id][instance_id]:
           challenges_match_randomness = False
-        
+
+        # response row
+        response_row = d_table_response.rows[row['id']]
+        # partially decrypted choices, d3 out of d2,d3,d4, so index 1.
+        d_choices = cast_ballot_partitions[p_id][instance_id].get_permutations_by_row_id(row['id'], partition_map_choices[p_id])[1]
+
         # check the appropriate side  
         if row['side'] == 'LEFT':
-          assert d_table.check_cl(p_id, instance_id, d_table_response.rows[row['id']], election.constant)
-          # FIXME: check that permutation probably transforms P-table row into this row
+          # check proper reveal
+          assert d_table.check_cl(p_id, instance_id, response_row, election.constant)
+          
+          d_left_perm = [data.Permutation(p) for p in d_table_response.get_permutations_by_row_id(row['id'], partition_map[p_id])[0]]
+
+          # get the corresponding P3 permutation (index 2, then partition)
+          p_choices = p_table_votes.get_permutations_by_row_id(response_row['pid'], partition_map_choices)[2][p_id]
+
+          for q_num, p_choice in enumerate(p_choices):
+            assert d_left_perm[q_num].permute_list(p_choice) == d_choices[q_num]
         else:
-          assert d_table.check_cr(p_id, instance_id, d_table_response.rows[row['id']], election.constant)          
-          # FIXME: check that permutation probably transforms this row into R-table row
-        
+          # check reveal
+          assert d_table.check_cr(p_id, instance_id, response_row, election.constant)
+          
+          # check right-hand permutation
+          d_right_perm = [data.Permutation(p) for p in d_table_response.get_permutations_by_row_id(row['id'], partition_map[p_id])[2]]
+
+          # get the corresponding R-table permutation (partition, then index 0)
+          r_choices = r_tables_by_partition[p_id].get_permutations_by_row_id(response_row['rid'], partition_map_choices[p_id])[0]
+          
+          for q_num, r_choice in enumerate(r_choices):
+            assert d_right_perm[q_num].permute_list(d_choices[q_num]) == r_choice        
     
   output_stream.write("""Election ID: %s
 Meeting 4 Successful
