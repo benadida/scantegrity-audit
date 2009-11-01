@@ -465,12 +465,12 @@ class Ballot(object):
     
     return True          
     
-  def verify_code_openings(self, open_ballot, constant, marked_codes_db = None):
+  def verify_code_openings(self, open_ballot, constant, code_callback_func = None):
     """
     this ballot is the commitment, the other ballot is the opening.
     
-    The marked_codes_db is an object that, if present, should support one method call:
-    marked_codes_db.add_code(web_serial_num, pid, question_id, symbol_id, confirmation_code)
+    The code_callback_func, if present, is a function to call back:
+    code_callback_func(web_serial_num, pid, question_id, symbol_id, confirmation_code)
     
     This is called only when a code is successfully verified, and enables bookkeeping of
     codes to show the voters in a verification interface.
@@ -500,8 +500,8 @@ class Ballot(object):
           return False
           
         # record the code for this ballot
-        if marked_codes_db:
-          marked_codes_db.add_code(open_ballot.webSerial, self.pid, q_id, s_id, s['code'])          
+        if code_callback_func:
+          code_callback_func(open_ballot.webSerial, self.pid, q_id, s_id, s['code'])          
   
     # only if all tests pass, then succeed
     return True
