@@ -109,8 +109,11 @@ def verify(output_stream):
   # we assume that the length of the challenge list is the right one
   challenge_row_ids_ints = set([int(c) for c in challenge_row_ids])
   challenges_match_randomness = False
-  if challenge_row_ids_ints == set(base.generate_random_int_list(meeting_two_random_data, election.num_ballots, len(challenge_row_ids))):
+  if challenge_row_ids_ints == set(base.generate_random_int_list(meeting_two_random_data+election.constant, election.num_ballots, len(challenge_row_ids))):
     challenges_match_randomness = True
+  else:
+    import pdb; pdb.set_trace()
+
   
   # check that the open P table rows match the challenge
   assert sorted(challenge_row_ids) == sorted([r['id'] for r in response_p_table.rows.values()]), "challenges don't match revealed row IDs in P table"
