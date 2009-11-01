@@ -95,7 +95,6 @@ def verify_open_p_and_d_tables(election, committed_p_table, committed_partitions
         p_composed = data.compose_lists_of_permutations(p_perm_2, [~p for p in p_perm_1])
         
         if d_composed != p_composed:
-          import pdb; pdb.set_trace()
           return False
   
   # if we make it to here, it's good
