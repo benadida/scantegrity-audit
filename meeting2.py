@@ -8,7 +8,7 @@ data path should NOT have a trailing slash
 """
 
 # core imports
-import sys
+import sys, base64
 import base, data, filenames
 
 # use the meeting1 data structures too
@@ -21,7 +21,7 @@ election, p_table, partitions = meeting1.election, meeting1.p_table, meeting1.pa
 meeting_two_in_xml = base.file_in_dir(base.DATA_PATH, filenames.MEETING_TWO_IN, 'Meeting Two In')
 meeting_two_out_xml = base.file_in_dir(base.DATA_PATH, filenames.MEETING_TWO_OUT, "Meeting Two Out")
 meeting_two_out_commitments_xml = base.file_in_dir(base.DATA_PATH, filenames.MEETING_TWO_OUT_COMMITMENTS, "Meeting Two Out Commitments")
-meeting_two_random_data = base.file_in_dir(base.DATA_PATH, filenames.MEETING_TWO_RANDOM_DATA, "Random Data for Meeting Two Challenges", xml=False)
+meeting_two_random_data = base.file_in_dir(base.DATA_PATH, filenames.MEETING_TWO_RANDOM_DATA, "Random Data for Meeting Two Challenges", xml=False, correct_windows=True)
 
 # get the challenges
 challenge_p_table = data.PTable()
@@ -109,7 +109,8 @@ def verify(output_stream):
   # we assume that the length of the challenge list is the right one
   challenge_row_ids_ints = set([int(c) for c in challenge_row_ids])
   challenges_match_randomness = False
-  if challenge_row_ids_ints == set(base.generate_random_int_list(meeting_two_random_data+election.constant, election.num_ballots, len(challenge_row_ids))):
+  seed = meeting_two_random_data + election.constant
+  if challenge_row_ids_ints == set(base.generate_random_int_list(seed, election.num_ballots, len(challenge_row_ids))):
     challenges_match_randomness = True
   else:
     import pdb; pdb.set_trace()

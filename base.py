@@ -29,12 +29,17 @@ def fingerprint_report():
 ## loading files and adding fingerprints
 ##
 
-def file_in_dir(dir, file, filename, xml = True):
+def file_in_dir(dir, file, filename, xml = True, correct_windows= False):
   path = dir + "/" + file
 
   f = open(path, "r")
   contents = f.read()
   f.close()
+  
+  # must do windows style verification loading of newlines
+  if correct_windows and contents.find('\r') == -1:
+    print "fixing windows"
+    contents = contents.replace('\n','\r\n')    
   
   add_fingerprint(filename, hashlib.sha1(contents).hexdigest())
   if xml:
@@ -48,6 +53,7 @@ def file_in_dir(dir, file, filename, xml = True):
 # reverse-engineered from
 # https://scantegrity.org/svn/data/takoma-nov3-2009/PUBLIC/PUBLIC/pre_election_audit.py
 
+    
 def prng(seed,index,modulus):
   """
   Generate a random integer modulo the modulus, given a seed and an index

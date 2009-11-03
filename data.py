@@ -5,6 +5,7 @@ ben@adida.net
 2009-10-10
 """
 
+import base64
 from xml.etree import ElementTree
 import commitment
 
@@ -320,7 +321,7 @@ class Election(object):
     """
     self.num_d_tables = int(etree.findtext('noDs'))
     self.num_ballots = int(etree.findtext('noBallots'))
-    self.constant = etree.findtext('constant')
+    self.constant = base64.decodestring(etree.findtext('constant'))
 
 class Table(object):
   """

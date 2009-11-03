@@ -28,7 +28,7 @@ def debug(message):
   if DEBUG:
     print message
 
-def commit(message, key_b64, constant_b64):
+def commit(message, key_b64, constant):
   """
   commit to a message with a given key and constant.
   
@@ -40,7 +40,9 @@ def commit(message, key_b64, constant_b64):
   # decode the base64 inputs
   key = base64.b64decode(key_b64)
   debug("key: %s " % binascii.hexlify(key))
-  constant = base64.b64decode(constant_b64)
+  
+  # now feeding it decoded
+  #constant = base64.b64decode(constant_b64)
   debug("constant: %s " % binascii.hexlify(constant))
   
   # compute sak from const
