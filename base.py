@@ -32,7 +32,11 @@ def fingerprint_report():
 def file_in_dir(dir, file, filename, xml = True, correct_windows= False):
   path = dir + "/" + file
 
-  f = open(path, "r")
+  try:
+    f = open(path, "r")
+  except:
+    print "could not find file %s" % path
+    sys.exit(1)
   contents = f.read()
   f.close()
   

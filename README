@@ -27,11 +27,13 @@ Any signatures of the outputs are performed separately, these programs just run 
 
 - meeting1.py
 
-load and hash the MeetingOneIn.xml and MeetingOneOut.xml files
+verify the basic parameters
 
 - meeting2.py
 
-load and hash the MeetingTwoIn, MeetingTwoOut, PrintCode, and MeetingTwoOutCommitments
+verify the audit of the P and D tables.
+*IMPORTANT*, the random seed data must be added in the election directory, the one that contains MeetingTwoIn.xml and MeetingTwoOut.xml,
+with name pre-election-random-data.txt
 
 - meeting3.py
 
