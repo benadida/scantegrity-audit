@@ -115,10 +115,19 @@ def __remove_minus_one_on(array):
 
 def _RANK_verify_symbols(ballot_symbols, p_table_symbols, question):
   mx = question.max_num_answers
-  p_table_symbols = __remove_minus_one_on(p_table_symbols)
+  # p_table_symbols_processed = __remove_minus_one_on(p_table_symbols)
   for symbol in ballot_symbols:
-    if p_table_symbols[symbol % mx] != symbol / mx:
-      return False
+    try:
+      if p_table_symbols[symbol % mx] != symbol / mx:
+        return False
+    except:
+      import pdb; pdb.set_trace()
+      
+  # check that the number of symbols that are not -1 is equal to the number of symbols
+  if len([p for p in p_table_symbols if p != -1]) != len(ballot_symbols):
+    import pdb; pdb.set_trace()
+    return False
+  
   return True
 
 def _SINGLE_verify_symbols(ballot_symbols, p_table_symbols, question):
@@ -463,7 +472,7 @@ class Ballot(object):
         if not VERIFY_SYMBOLS[q_info.type_answer_choice](ballot_symbols, p_table_symbols, q_info):
           import pdb;pdb.set_trace()
           return False
-    
+              
     return True          
     
   def verify_code_openings(self, open_ballot, constant, code_callback_func = None):
