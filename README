@@ -27,15 +27,38 @@ Any signatures of the outputs are performed separately, these programs just run 
 
 - meeting1.py
 
+python meeting1.py {DATA_DIR}
+
 verify the basic parameters
 
+In the case of the Takoma Park Election, the DATA_DIR is a specific ward, so this command needs to be run 6 times.
+
 - meeting2.py
+
+python meeting2.py {DATA_DIR}
 
 verify the audit of the P and D tables.
 *IMPORTANT*, the random seed data must be added in the election directory, the one that contains MeetingTwoIn.xml and MeetingTwoOut.xml,
 with name pre-election-random-data.txt
 
+In the case of the Takoma Park Election, the DATA_DIR is a specific ward, so this command needs to be run 6 times.
+
 - meeting3.py
+
+python meeting3.py {DATA_DIR}
+
+In the case of the Takoma Park Election, the DATA_DIR is a specific ward, so this command needs to be run 6 times.
+
+If you want to get the confirmation codes, you need to run
+
+python meeting3.py {DATA_DIR} {CONFIRMATION_CODE_FILE_PATH}
+
+- tally
+
+python tally.py {QUESTION_ID} {DATA_PATH_1} {DATA_PATH_2} ...
+
+In the case of the Takoma Park election, question_id 0 needs all 6 data paths,
+while question_id 1 is run independently on each ward.
 
 - meeting4.py
 
