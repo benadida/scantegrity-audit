@@ -70,7 +70,7 @@ class RankBallot(object):
         bad_ballot = b
         print "oy"
       
-      print candidate_tallies
+      # print candidate_tallies
 
       if max(candidate_tallies) >= absolute_majority:
         break
@@ -79,7 +79,7 @@ class RankBallot(object):
       lowest_count = min([tally for tally in candidate_tallies if tally is not None])
       lowest_count_index = candidate_tallies.index(lowest_count)
       eliminated.append(lowest_count_index)
-      print "eliminating candidate %s with count %s" % (lowest_count_index, lowest_count)
+      #print "eliminating candidate %s with count %s" % (lowest_count_index, lowest_count)
       for b in ballots:
         b.go_next_choice(lowest_count_index)
     

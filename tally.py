@@ -34,7 +34,7 @@ from electionparams import *
 r_tables_xml = [base.file_in_dir(data_path, filenames.MEETING_THREE_OUT, 'Meeting Three Out') for data_path in DATA_PATHS]
 r_tables_list = [data.parse_r_tables(r_tables) for r_tables in r_tables_xml]
 
-print "ok now tallying\n\n"
+# print "ok now tallying\n\n"
 
 # the list of partitions, each of which is a list of the max number of answers each question allows
 partition_map = election.partition_map_choices
@@ -79,7 +79,7 @@ Tally
 
 %s
 
-""" % (election.spec.id, len(r_tables[0].rows), RESULT))
+""" % (election.spec.id, len(BALLOTS), RESULT))
 
 if __name__ == '__main__':
   tally(sys.stdout)
