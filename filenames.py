@@ -25,6 +25,17 @@ MEETING_THREE_IN = "MeetingThreeIn.xml"
 MEETING_THREE_OUT = "MeetingThreeOut.xml"
 MEETING_THREE_OUT_CODES = "MeetingThreeOutCodes.xml"
 
+def go_provisional():
+  # oh I feel dirty, but this is what happens when a new piece of the process is introduced without warning
+  global MEETING_THREE_IN
+  global MEETING_THREE_OUT
+  global MEETING_THREE_OUT_CODES
+  
+  # third meeting with provisional ballots
+  MEETING_THREE_IN = "MeetingThreeIn-Provisional-Manual.xml"
+  MEETING_THREE_OUT = "MeetingThreeOut-Provisional-Manual.xml"
+  MEETING_THREE_OUT_CODES = "MeetingThreeOutCodes-Provisional-Manual.xml"
+
 # fourth meeting
 MEETING_FOUR_IN = "MeetingFourIn.xml"
 MEETING_FOUR_OUT = "MeetingFourOut.xml"
