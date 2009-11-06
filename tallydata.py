@@ -24,7 +24,11 @@ class RankBallot(object):
       self.__current_index += 1
     
       if self.current_choice == None:
-        self.exhausted = True
+        # try incrementing one more try, since you can skip one
+        self.__current_index += 1
+        
+        if self.current_choice == None:
+          self.exhausted = True
   
   @property
   def current_choice(self):
@@ -41,7 +45,10 @@ class RankBallot(object):
     
   def reset(self):
     self.__current_index = 0
-    self.exhausted = (self.current_choice == None)
+    if self.current_choice == None:
+      self.__current_index = 1
+      if self.current_choice == None:
+        self.exhausted = True
     
   @classmethod
   def tally(cls, question, ballots):
@@ -79,7 +86,7 @@ class RankBallot(object):
       lowest_count = min([tally for tally in candidate_tallies if tally is not None])
       lowest_count_index = candidate_tallies.index(lowest_count)
       eliminated.append(lowest_count_index)
-      #print "eliminating candidate %s with count %s" % (lowest_count_index, lowest_count)
+      # print "eliminating candidate %s with count %s" % (lowest_count_index, lowest_count)
       for b in ballots:
         b.go_next_choice(lowest_count_index)
     
