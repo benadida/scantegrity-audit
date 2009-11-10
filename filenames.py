@@ -35,6 +35,16 @@ def go_provisional():
   MEETING_THREE_IN = "MeetingThreeIn-Provisional-Manual.xml"
   MEETING_THREE_OUT = "MeetingThreeOut-Provisional-Manual.xml"
   MEETING_THREE_OUT_CODES = "MeetingThreeOutCodes-Provisional-Manual.xml"
+  
+def reset():
+  # oh I feel dirty, but this is what happens when a new piece of the process is introduced without warning
+  global MEETING_THREE_IN
+  global MEETING_THREE_OUT
+  global MEETING_THREE_OUT_CODES
+
+  MEETING_THREE_IN = "MeetingThreeIn.xml"
+  MEETING_THREE_OUT = "MeetingThreeOut.xml"
+  MEETING_THREE_OUT_CODES = "MeetingThreeOutCodes.xml"
 
 # fourth meeting
 MEETING_FOUR_IN = "MeetingFourIn.xml"
@@ -47,3 +57,7 @@ CONTESTED_BALLOTS_REPLY = "ReplyToContestedCodes.xml"
 # spoiled ballots
 SPOILED_BALLOTS_CODES = "SpoiledBallotsCodes.xml"
 SPOILED_BALLOTS_MIXNET = "SpoiledBallotsMixnet.xml"
+
+# unused ballots
+UNUSED_BALLOTS_CODES = "PrintAuditBallots.xml"
+UNUSED_BALLOTS_MIXNET = "PrintAuditMixnet.xml"

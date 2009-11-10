@@ -12,12 +12,15 @@ import sys
 import base, data, filenames
 
 # use the meeting1,2,3 data structures too
-import meeting1, meeting2, meeting3
+import meeting1, meeting2
+
+# use provisional ballots as well
+import meeting3provisional as meeting3
 
 # fourth meeting
 meeting_four_in_xml = base.file_in_dir(base.DATA_PATH, filenames.MEETING_FOUR_IN, 'Meeting Four In')
 meeting_four_out_xml = base.file_in_dir(base.DATA_PATH, filenames.MEETING_FOUR_OUT, 'Meeting Four Out')
-meeting_four_random_data = base.file_in_dir(base.DATA_PATH, filenames.MEETING_FOUR_RANDOM_DATA, "Random Data for Meeting Four Challenges", xml=False)
+meeting_four_random_data = base.file_in_dir(base.DATA_PATH, filenames.MEETING_FOUR_RANDOM_DATA, "Random Data for Meeting Four Challenges", xml=False, correct_windows=True)
 
 # from meeting1 and meeting 2
 election, d_table_commitments, already_open_d_tables = meeting1.election, meeting1.partitions, meeting2.response_partitions
@@ -35,7 +38,7 @@ r_tables_by_partition = data.parse_r_tables(meeting3.meeting_three_out_xml)
 
 def verify(output_stream):
   # verify that challenges are appropriately generated
-  challenges_match_randomness = False
+  challenges_match_randomness = True
   
   # we assume that one D table always opens on the same side
   # we do a bit of an odd thing here to keep the partitions and d tables in order
@@ -76,12 +79,17 @@ def verify(output_stream):
       for row in d_table_challenge.rows.values():
         # does it match the randomness?
         if row['side'] != expected_challenge_sides[p_id][instance_id]:
+          import pdb; pdb.set_trace()
           challenges_match_randomness = False
 
         # response row
         response_row = d_table_response.rows[row['id']]
         # partially decrypted choices, d3 out of d2,d3,d4, so index 1.
-        d_choices = cast_ballot_partitions[p_id][instance_id].get_permutations_by_row_id(row['id'], partition_map_choices[p_id])[1]
+        try:
+          d_choices = cast_ballot_partitions[p_id][instance_id].get_permutations_by_row_id(row['id'], partition_map_choices[p_id])[1]
+        except:
+          import pdb; pdb.set_trace()
+          print "oy"
 
         # check the appropriate side  
         if row['side'] == 'LEFT':
